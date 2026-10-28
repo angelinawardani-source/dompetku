@@ -1,47 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../models/transaction.dart';
+import '../providers/dompet_provider.dart';
 import 'add_transaction.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  int balance = 255000;
-
-  final List<TransactionItem> transactions = [
-    TransactionItem(
-      title: 'Nasi goreng',
-      time: '07.30',
-      amount: 15000,
-      icon: Icons.restaurant,
-      color: Colors.orange,
-    ),
-    TransactionItem(
-      title: 'Ojek ke kampus',
-      time: '08.10',
-      amount: 12000,
-      icon: Icons.two_wheeler,
-      color: Colors.blue,
-    ),
-    TransactionItem(
-      title: 'Print tugas',
-      time: '10.45',
-      amount: 3000,
-      icon: Icons.school,
-      color: Colors.purple,
-    ),
-    TransactionItem(
-      title: 'Es teh',
-      time: '12.15',
-      amount: 5000,
-      icon: Icons.local_cafe,
-      color: Colors.amber,
-    ),
-  ];
 
   String formatRupiah(int amount) {
     final formatted = amount.toString().replaceAllMapped(
@@ -52,7 +17,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dompet = ref.watch(dompetProvider);
+    final balance = dompet.balance;
+    final transactions = dompet.transactions;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       // TANPA APPBAR DI HALAMAN HOME (Sesuai Ketentuan)
@@ -71,7 +40,6 @@ class _HomePageState extends State<HomePage> {
                       const CircleAvatar(
                         radius: 22,
                         backgroundColor: Color(0xFF00796B),
-                        // MENGGUNAKAN FOTO PROFIL profile.jpg
                         backgroundImage: AssetImage('assets/profile.jpg'),
                       ),
                       const SizedBox(width: 12),
@@ -106,7 +74,8 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.notifications_outlined, color: Colors.black),
+                      icon: const Icon(Icons.notifications_outlined,
+                          color: Colors.black),
                       onPressed: () {},
                     ),
                   ),
@@ -159,7 +128,8 @@ class _HomePageState extends State<HomePage> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         onPressed: () async {
-                          final newTransaction = await Navigator.push<TransactionItem>(
+                          final newTransaction =
+                              await Navigator.push<TransactionItem>(
                             context,
                             MaterialPageRoute(
                               builder: (context) => const AddTransactionPage(),
@@ -167,10 +137,9 @@ class _HomePageState extends State<HomePage> {
                           );
 
                           if (newTransaction != null) {
-                            setState(() {
-                              transactions.insert(0, newTransaction);
-                              balance -= newTransaction.amount;
-                            });
+                            ref
+                                .read(dompetProvider.notifier)
+                                .addTransaction(newTransaction);
                           }
                         },
                         child: const Text(
@@ -200,10 +169,22 @@ class _HomePageState extends State<HomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: const [
-                  CategoryWidget(icon: Icons.restaurant, label: 'Makan', color: Colors.orange),
-                  CategoryWidget(icon: Icons.two_wheeler, label: 'Transport', color: Colors.blue),
-                  CategoryWidget(icon: Icons.school, label: 'Kuliah', color: Colors.purple),
-                  CategoryWidget(icon: Icons.more_horiz, label: 'Lainnya', color: Colors.grey),
+                  CategoryWidget(
+                      icon: Icons.restaurant,
+                      label: 'Makan',
+                      color: Colors.orange),
+                  CategoryWidget(
+                      icon: Icons.two_wheeler,
+                      label: 'Transport',
+                      color: Colors.blue),
+                  CategoryWidget(
+                      icon: Icons.school,
+                      label: 'Kuliah',
+                      color: Colors.purple),
+                  CategoryWidget(
+                      icon: Icons.more_horiz,
+                      label: 'Lainnya',
+                      color: Colors.grey),
                 ],
               ),
               const SizedBox(height: 24),
@@ -246,7 +227,8 @@ class _HomePageState extends State<HomePage> {
                   itemBuilder: (context, index) {
                     final item = transactions[index];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       child: Row(
                         children: [
                           Container(

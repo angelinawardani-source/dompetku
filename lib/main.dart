@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/homepage.dart';
 
 void main() {
-  runApp(const DompetkuApp());
+  runApp(const ProviderScope(child: DompetkuApp()));
 }
 
 class DompetkuApp extends StatelessWidget {
